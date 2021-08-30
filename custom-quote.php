@@ -73,7 +73,7 @@ function custom_quote_shortcode( $atts, $content = null ) {
 	$attributes = shortcode_atts(
 		array(
 			'length' => -1,
-			'class'  => 'blockquote',
+			'class'  => 'blockquote', // default css class
 			'api'    => true,
 		),
 		$atts
@@ -88,8 +88,15 @@ function custom_quote_shortcode( $atts, $content = null ) {
 		$random_quote = custom_quote_fetch_random_quote_from_api(); // Fetch Random quote from an API
 	}
 
-	// If length attribute is present then trim quote to specified length and append ellipses.
-	if ( is_numeric( $attributes['length'] ) && $attributes['length'] > 0
+	/**
+	 * If length attribute is present then
+	 * check if its numeric
+	 * check if has value greater than  0
+	 * check if specified trim length is less than quote length
+	 * then trim quote to specified length and append ellipses.
+	 */
+	if ( is_numeric( $attributes['length'] )
+		&& $attributes['length'] > 0
 		&& strlen( $random_quote ) > $attributes['length'] ) {
 		$random_quote = substr( $random_quote, 0, $attributes['length'] ) . '...';
 	}
