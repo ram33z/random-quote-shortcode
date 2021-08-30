@@ -51,35 +51,17 @@ function custom_quote_get_random_quote_local() {
  * Get Random Quote from Remote API.
  */
 function custom_quote_fetch_random_quote_from_api() {
+	$response  = wp_remote_get( CUSTOM_QUOTE_API_URI );
+	$http_code = wp_remote_retrieve_response_code( $response );
 
-	$curl = curl_init();
-
-	curl_setopt_array(
-		$curl,
-		array(
-			CURLOPT_URL            => CUSTOM_QUOTE_API_URI,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 30,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'GET',
-		)
-	);
-
-	$response  = curl_exec( $curl );
-	$error_msg = curl_error( $curl );
-
-	curl_close( $curl );
-
-	// If API call ends with an error, then display quote from local.
-	if ( isset( $error_msg ) && strlen( $error_msg ) > 0 ) {
-		return custom_quote_get_random_quote_local();
+	// Check api call was successful
+	if ( $http_code === 200 ) {
+		$random_quote = json_decode( wp_remote_retrieve_body( $response ) ); // Decode JSON response to PHP Object
+		return $random_quote->content; // Extract just quote from response.
 	}
 
-	$random_quote = json_decode( $response ); // Decode JSON response to PHP Object
-	return $random_quote->content; // Extract just quote from response.
+	// If API call ends with an error, then display quote from local.
+	return custom_quote_get_random_quote_local();
 }
 
 /**
@@ -87,13 +69,12 @@ function custom_quote_fetch_random_quote_from_api() {
  */
 function custom_quote_shortcode( $atts, $content = null ) {
 
-	$random_quote = '';
 	// Extract shortcode attributes, apply default values if not present
 	$attributes = shortcode_atts(
 		array(
 			'length' => -1,
 			'class'  => 'blockquote',
-			'no_api' => false,
+			'api'    => true,
 		),
 		$atts
 	);
@@ -101,7 +82,7 @@ function custom_quote_shortcode( $atts, $content = null ) {
 	$class_name = $attributes['class']; // CSS class name to apply
 
 	// Check if no_api attribute is provided.
-	if ( $attributes['no_api'] == true ) {
+	if ( $attributes['api'] == false ) {
 		$random_quote = custom_quote_get_random_quote_local(); // Fetch Random quote from local list
 	} else {
 		$random_quote = custom_quote_fetch_random_quote_from_api(); // Fetch Random quote from an API
