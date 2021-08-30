@@ -13,6 +13,9 @@ Following attributes are supported to customize behaviour of `[custom_quote]` sh
 - *class* : To add css class to enclosing Quote element. By default *blockquote* class is added.
 - *no-api*: If present, API call will be omitted and any random quote from local static Quotes list will be shown.
 
+###  To display shortcode in header or footer areas add following in your theme's template:
+`<?php echo do_shortcode("[custom_quote]"); ?>`
+
 ## Resources
 I've compiled a couple resources that were extremely helpful for me when building this plugin.
 

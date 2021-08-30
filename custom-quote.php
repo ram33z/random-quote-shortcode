@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:     Custom Quote
+ * Plugin Name:     Custom Quote (Random Quotes)
  * Plugin URI:      https://twitter.com/rameezjoya
  * Description:     This plugin will add support for 'custom_quote' shortcode, that can be use to display a random quote on every page load.
  * Author:          Rameez Joya
@@ -12,28 +12,52 @@
  */
 
 
+ // If this file is called directly, abort.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
 
+/**
+ * Random Quote API URI
+ */
+define( 'CUSTOM_QUOTE_API_URI', 'https://api.quotable.io/random' );
 
-function custom_quote_shortcode( $atts, $content = null ) {
+/**
+ * Static list of quotes
+ */
+define(
+	'CUSTOM_QUOTE_LOCAL_LIST',
+	array(
+		'An ant on the move does more than a dozing ox',
+		'Life is what happens while you are making other plans.',
+		'Can you imagine what I would do if I could do all I can?',
+		'If you only have a hammer, you tend to see every problem as a nail.',
+		'I am a great believer in luck and I find the harder I work, the more I have of it.',
+		'Ignorant men do not know what good they hold in their hands until they have flung it away.',
+		'If you must tell me your opinions, tell me what you believe in. I have plenty of doubts of my own.',
+		'True friendship is a plant of slow growth, and must undergo and withstand the shocks of adversity, before it is entitled to the appellation.',
+	)
+);
 
-	// $quotes_list = array(
-	// '{"_id":"JIP8Z3unkKLi","tags":["famous-quotes"],"content":"If you must tell me your opinions, tell me what you believe in. I have plenty of doubts of my own.","author":"Johann Wolfgang von Goethe","authorSlug":"johann-wolfgang-von-goethe","length":98,"dateAdded":"2020-04-14","dateModified":"2021-06-17"}',
-	// '{"_id":"JIP8Z3unkKLi","tags":["famous-quotes"],"content":"If you must tell me your opinions, tell me what you believe in. I have plenty of doubts of my own.","author":"Johann Wolfgang von Goethe","authorSlug":"johann-wolfgang-von-goethe","length":98,"dateAdded":"2020-04-14","dateModified":"2021-06-17"}',
-	// '{"_id":"KsFj1hU_I3","tags":["friendship"],"content":"True friendship is a plant of slow growth, and must undergo and withstand the shocks of adversity, before it is entitled to the appellation.","author":"George Washington","authorSlug":"george-washington","length":140,"dateAdded":"2021-03-28","dateModified":"2021-03-28"}',
-	// );
+/**
+ * Get Random quote from local list of quotes
+ */
+function custom_quote_get_random_quote_local() {
+	$random_index = wp_rand( 0, count( CUSTOM_QUOTE_LOCAL_LIST ) - 1 ); // Get random index
+	return CUSTOM_QUOTE_LOCAL_LIST[ $random_index ];
+}
 
-	$attributes = shortcode_atts( array( 'length' => -1 ), $atts );
+/**
+ * Get Random Quote from Remote API.
+ */
+function custom_quote_fetch_random_quote_from_api() {
 
-	var_dump( $attributes );
-
-	// This is where you run the code and display the output
 	$curl = curl_init();
-	$url  = 'https://api.quotable.io/random';
 
 	curl_setopt_array(
 		$curl,
 		array(
-			CURLOPT_URL            => $url,
+			CURLOPT_URL            => CUSTOM_QUOTE_API_URI,
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_ENCODING       => '',
@@ -44,36 +68,67 @@ function custom_quote_shortcode( $atts, $content = null ) {
 		)
 	);
 
-	$response = curl_exec( $curl );
-	$err      = curl_error( $curl );
+	$response  = curl_exec( $curl );
+	$error_msg = curl_error( $curl );
 
 	curl_close( $curl );
-	// $random_index = wp_rand( 0, count( $quotes_list ) - 1 );
-	// $random_quote = json_decode( $quotes_list[ $random_index ] );
-	$random_quote = json_decode( $response );
-	$print_quote  = $random_quote->content;
 
-	if ( isset( $attributes['length'] ) && is_numeric( $attributes['length'] ) && $attributes['length'] > 0 ) {
-		$print_quote = substr( $print_quote, 0, $attributes['length'] ) . '...';
+	// If API call ends with an error, then display quote from local.
+	if ( isset( $error_msg ) && strlen( $error_msg ) > 0 ) {
+		return custom_quote_get_random_quote_local();
+	}
+
+	$random_quote = json_decode( $response ); // Decode JSON response to PHP Object
+	return $random_quote->content; // Extract just quote from response.
+}
+
+/**
+ * Function to process custom_quote shortcode.
+ */
+function custom_quote_shortcode( $atts, $content = null ) {
+
+	$random_quote = '';
+	// Extract shortcode attributes, apply default values if not present
+	$attributes = shortcode_atts(
+		array(
+			'length' => -1,
+			'class'  => 'blockquote',
+			'no_api' => false,
+		),
+		$atts
+	);
+
+	$class_name = $attributes['class']; // CSS class name to apply
+
+	// Check if no_api attribute is provided.
+	if ( $attributes['no_api'] == true ) {
+		$random_quote = custom_quote_get_random_quote_local(); // Fetch Random quote from local list
+	} else {
+		$random_quote = custom_quote_fetch_random_quote_from_api(); // Fetch Random quote from an API
+	}
+
+	// If length attribute is present then trim quote to specified length and append ellipses.
+	if ( is_numeric( $attributes['length'] ) && $attributes['length'] > 0
+		&& strlen( $random_quote ) > $attributes['length'] ) {
+		$random_quote = substr( $random_quote, 0, $attributes['length'] ) . '...';
 	}
 
 	ob_start();
 	?>
 
-	<div class="blockquote">
+	<div class="<?php echo $class_name; ?>">
 		<?php
-			echo $print_quote;
+			echo $random_quote;
 		?>
 	</div>
 	
 	<?php
 	return ob_get_clean();
-
 }
 
 add_shortcode( 'custom_quote', 'custom_quote_shortcode' );
 
-// By default, shortcodes are not allowed to be executed in a custom HTML widget. To change this, you will need to add the following code
-// add_filter( 'widget_text', 'do_shortcode' );
-// OR
-add_filter( 'widget_custom_html_content', 'do_shortcode' );
+/**
+ * By default, shortcodes are not allowed to be executed in a custom HTML widget. To change this, we are adding following filter to enable shortcodes for wigets
+ */
+add_filter( 'widget_text', 'do_shortcode' );
