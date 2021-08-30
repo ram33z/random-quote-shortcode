@@ -20,14 +20,12 @@ Following attributes are supported to customize behaviour of `[custom_quote]` sh
 
 #### Example with attribute
 
-`[custom_quote no_api='true' class='strong' length='20']`
+`[custom_quote api='false' class='strong' length='20']`
 
 ### To display shortcode in header or footer areas add following in your theme's template:
 
 `<?php echo do_shortcode("[custom_quote]"); ?>`
 
 ## Resources
-
-I've compiled a couple resources that were extremely helpful for me when building this plugin.
 
 -   [Quotable](https://github.com/lukePeavey/quotable#live-examples) : Quotable is a free, open source quotations API.
