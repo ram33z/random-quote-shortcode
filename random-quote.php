@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name:     Custom Quote (Random Quotes)
- * Plugin URI:      https://twitter.com/rameezjoya
- * Description:     This plugin will add support for 'custom_quote' shortcode, that can be use to display a random quote on every page load.
+ * Plugin Name:     Random Quotes Shortcode
+ * Plugin URI:      https://github.com/ram33z/random-quote-shortcode
+ * Description:     This plugin will add support for 'random_quote' shortcode, that can be use to display a random quote on every page load.
  * Author:          Rameez Joya
  * Author URI:      https://twitter.com/rameezjoya
- * Text Domain:     custom-quote
+ * Text Domain:     random-quote
  * Version:         0.1.0
  *
- * @package         Custom_Quote
+ * @package         Random_Quote
  */
 
 
@@ -20,13 +20,13 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Random Quote API URI
  */
-define( 'CUSTOM_QUOTE_API_URI', 'https://api.quotable.io/random' );
+define( 'RANDOM_QUOTE_API_URI', 'https://api.quotable.io/random' );
 
 /**
  * Static list of quotes
  */
 define(
-	'CUSTOM_QUOTE_LOCAL_LIST',
+	'RANDOM_QUOTE_LOCAL_LIST',
 	array(
 		'An ant on the move does more than a dozing ox',
 		'Life is what happens while you are making other plans.',
@@ -42,16 +42,16 @@ define(
 /**
  * Get Random quote from local list of quotes
  */
-function custom_quote_get_random_quote_local() {
-	$random_index = wp_rand( 0, count( CUSTOM_QUOTE_LOCAL_LIST ) - 1 ); // Get random index
-	return CUSTOM_QUOTE_LOCAL_LIST[ $random_index ];
+function random_quote_get_random_quote_local() {
+	$random_index = wp_rand( 0, count( RANDOM_QUOTE_LOCAL_LIST ) - 1 ); // Get random index
+	return RANDOM_QUOTE_LOCAL_LIST[ $random_index ];
 }
 
 /**
  * Get Random Quote from Remote API.
  */
-function custom_quote_fetch_random_quote_from_api() {
-	$response  = wp_remote_get( CUSTOM_QUOTE_API_URI );
+function random_quote_fetch_random_quote_from_api() {
+	$response  = wp_remote_get( RANDOM_QUOTE_API_URI );
 	$http_code = wp_remote_retrieve_response_code( $response );
 
 	// Check api call was successful
@@ -61,13 +61,13 @@ function custom_quote_fetch_random_quote_from_api() {
 	}
 
 	// If API call ends with an error, then display quote from local.
-	return custom_quote_get_random_quote_local();
+	return random_quote_get_random_quote_local();
 }
 
 /**
- * Function to process custom_quote shortcode.
+ * Function to process random_quote shortcode.
  */
-function custom_quote_shortcode( $atts, $content = null ) {
+function random_quote_shortcode( $atts, $content = null ) {
 
 	// Extract shortcode attributes, apply default values if not present
 	$attributes = shortcode_atts(
@@ -81,11 +81,11 @@ function custom_quote_shortcode( $atts, $content = null ) {
 
 	$class_name = $attributes['class']; // CSS class name to apply
 
-	// Check if no_api attribute is provided.
+	// Check if api attribute is provided.
 	if ( $attributes['api'] == false ) {
-		$random_quote = custom_quote_get_random_quote_local(); // Fetch Random quote from local list
+		$random_quote = random_quote_get_random_quote_local(); // Fetch Random quote from local list
 	} else {
-		$random_quote = custom_quote_fetch_random_quote_from_api(); // Fetch Random quote from an API
+		$random_quote = random_quote_fetch_random_quote_from_api(); // Fetch Random quote from an API
 	}
 
 	/**
@@ -114,7 +114,7 @@ function custom_quote_shortcode( $atts, $content = null ) {
 	return ob_get_clean();
 }
 
-add_shortcode( 'custom_quote', 'custom_quote_shortcode' );
+add_shortcode( 'random_quote', 'random_quote_shortcode' );
 
 /**
  * By default, shortcodes are not allowed to be executed in a custom HTML widget. To change this, we are adding following filter to enable shortcodes for wigets
