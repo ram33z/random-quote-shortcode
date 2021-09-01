@@ -82,7 +82,7 @@ function random_quote_shortcode( $atts, $content = null ) {
 	$class_name = $attributes['class']; // CSS class name to apply
 
 	// Check if api attribute is provided.
-	if ( $attributes['api'] == false ) {
+	if ( $attributes['api'] == 'false' ) {
 		$random_quote = random_quote_get_random_quote_local(); // Fetch Random quote from local list
 	} else {
 		$random_quote = random_quote_fetch_random_quote_from_api(); // Fetch Random quote from an API
